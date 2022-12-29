@@ -3,33 +3,33 @@ import { hash, isHashProofed } from './functions.js'
 
 export class BlockChain{
 
-    constructor(difficulty=4, chain=[]){
+    constructor(difficulty=4, participants=[], prizeMine = 100){
+        this.prizeMine = prizeMine
         this.difficulty = difficulty
-        this.chain = chain
-        if(this.chain.length==0){
-            this.chain.push({index: 0, log: '', previousHash: '', hash: ''})
-        }
+        this.chain = [{index: 0, log: '', previousHash: '', hash: '', participants:participants}]
     }
 
-    createBlock(participants){
+    createBlock(){
+        let participants = this.chain.at(-1).participants
         let block = new Block(this.chain.length,[],this.chain.at(-1).hash)
         participants.forEach(participant => block.addParticipant(participant.name,participant.coins))
         return block
     }
 
-    mineBlock (block) {
+    mineBlock (block, participantId) {
+        block.endBlock(participantId, this.prizeMine)
+        const blockHash = block.hash
+
         let nonce = 0
         let startTime = +new Date()
-    
+
         while (true) {
-          const blockHash = hash(JSON.stringify(block))
+
           const proofingHash = hash(blockHash + nonce)
-    
           if (isHashProofed(proofingHash, this.difficulty)) {
             const endTime = +new Date()
             const mineTime = (endTime - startTime) / 1000
-    
-            console.log(`Mined block ${block.sequence} in ${mineTime} seconds. (${nonce} attempts)`)
+            console.log(`Mined block ${block.index} in ${mineTime} seconds. (${nonce} attempts)`)
     
             return nonce
           }
@@ -42,7 +42,7 @@ export class BlockChain{
             console.error(`Invalid block: wrong previous hash`)
             return false
         }
-        const blockHash = hash(JSON.stringify(block))
+        const blockHash = block.hash
         const proofingHash = hash(blockHash + nonce)
         if (!isHashProofed(proofingHash, this.difficulty)) {
             console.error(`Invalid block: Hash is not proofed, nonce ${nonce} is not valid`)
@@ -57,11 +57,13 @@ export class BlockChain{
                 index: block.index,
                 previousHash: block.previousHash,
                 hash: block.hash,
-                log: block.logString
+                log: block.logString,
+                participants: block.participants
             }
             this.chain.push(newblock)
+            console.log('new block pushed.')
         } else {
-            console.log('Invalid Block')
+            console.log("Invalid Block. Won't be pushed")
         }
     }
 

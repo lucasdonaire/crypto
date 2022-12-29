@@ -2,47 +2,42 @@ import { hash } from './functions.js'
 import random from 'random'
 
 export class Block{
-    constructor(index, participants, previousHash='', hash=''){
+    constructor(index, participants, previousHash='',log=[],hash='',logString=''){
         this.index = index
-        this.previousHash = previousHash
         this.participants = participants
-        this.transactions = []
-        this.log = []
-        this.active = true
+        this.previousHash = previousHash
+        this.log = log
+        this.hash = hash
+        this.logString = logString
+        // this.log = []
+        // this.hash
+        // this.logString
     }
 
     transaction(send,recieve,amount){
-        if(this.active){
+        // if(this.active){
             if(this.participants[send].coins < amount ){ 
-                this.log.push(`participant ${send} did not have enought lucoins to sends ${amount} to participant ${recieve}`)
+                this.log.push(`participant ${send} did not have enought coins to sends ${amount} to participant ${recieve}`)
                 return 
             }
-            this.transactions.push({send:send,recieve:recieve,amount:amount})
             this.participants[send].coins = this.participants[send].coins - amount
             this.participants[recieve].coins = this.participants[recieve].coins + amount
-            this.log.push(`participant ${send} sends ${amount} lucoins to participant ${recieve}`) 
-        }
+            this.log.push(`participant ${send} sends ${amount} coins to participant ${recieve}`) 
+        // }
     }
 
-    show(){
-        console.log('')
-        console.log('==== SHOW ====')
-        console.log('')
-        this.participants.forEach(participant => console.log(`participant ${participant.name} have ${participant.coins} lucoins`))
-        console.log('')
-        console.log('---- history ----')
-        console.log('')
-        this.log.forEach((text, index) => console.log(`(${index}): ${text} \n`))
-        console.log('==== END ====')
-        console.log('')
+    mineCoins(participantId, amount){
+        this.participants[participantId].coins = this.participants[participantId].coins + amount
+        this.log.push(`participant ${participantId} mined ${amount} coins`)
     }
+
 
     addParticipant(name,coins){
-        if(this.active){
+        // if(this.active){
             let participant = {name:name, coins:coins, id: this.participants.length}
             this.participants.push(participant)
             this.log.push(`participant ${participant.id} join the block with ${participant.coins} coins`)
-        }
+        // }
     }
 
     run(n){
@@ -62,15 +57,39 @@ export class Block{
         str = str + '\n HISTORY \n'
         this.log.forEach((text, index) => str = str+`(${index}): ${text} \n`)
         str = str + '\n PARTICIPANTS \n'
-        this.participants.forEach(participant => str = str + `\n participant ${participant.name} have ${participant.coins} lucoins`)
+        this.participants.forEach(participant => str = str + `\n participant ${participant.name} have ${participant.coins} coins`)
         return str
     }
 
-    endBlock(){
-        this.active = false
-        this.hash = hash(JSON.stringify(this))
+
+    endBlock(miner, amount){
+        this.mineCoins(miner, amount)
         this.logString = this.returnLog()
+        this.hash = hash(JSON.stringify(this))
         return this
+    }
+
+    show(){
+        console.log('')
+        console.log('==== SHOW ====')
+        console.log('')
+        this.participants.forEach(participant => console.log(`participant ${participant.name} have ${participant.coins} coins`))
+        console.log('')
+        console.log('---- history ----')
+        console.log('')
+        this.log.forEach((text, index) => console.log(`(${index}): ${text} \n`))
+        console.log('==== END ====')
+        console.log('')
+    }
+
+    copy(){ // not working
+        const index = this.index
+        const participants = this.participants
+        const previousHash = this.previousHash
+        const log = this.log
+        const hash = this.hash
+        const logString = this.logString
+        return new Block(index,participants,previousHash,log,hash,logString)
     }
 
 }
