@@ -10,6 +10,7 @@ function testes(){
         {name: 'gab', coins: 200},
         {name: 'paes', coins: 200},
         {name: 'albi', coins: 200},
+        {name: 'fe', coins: 200},
       ]
     
     const blockchain = new BlockChain(difficulty, participants)
